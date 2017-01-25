@@ -10,6 +10,7 @@ class Maze:
 	def __init__(self):
 		self.end = False  #bool to check if end is reached
 		#self.first = True
+		self.depth = 0 #keep track of depth of maze depth
 		self.path = "" # keep track of path 
 		#self.d = dict.fromkeys(string.ascii_lowercase, 0) #dictionary for all lowercase characters as keys and setting value to 0
 		self.d = {} #declare empty dictionary 
@@ -59,8 +60,8 @@ class Maze:
 	curr_path += coordinate
 	prev_coordinate = coordinate_to_check
 	search(coordinate)
-
 	# This should never run
+
 	}"""
 
 	"""
@@ -90,15 +91,17 @@ class Maze:
 		self.search(x,y)
 	"""
 
-	def start(self): #naive solution does not take account to backtracking...
-		#response = requests.get(url="https://challenge.flipboard.com/step?s=1.49"+"&x="+self.x+"&y="+self.y)
-		response = requests.get(url="https://challenge.flipboard.com/step?s=123456.5"+"&x="+self.x+"&y="+self.y)
+	def start(self): #naive solution does not take account to backtracking...ran out of time
+		#response = requests.get(url="https://challenge.flipboard.com/step?s="+self.s+"&x="+self.x+"&y="+self.y)
+		#print "https://challenge.flipboard.com/step?s="+self.s+"&x="+self.x+"&y="+self.y
+		response = requests.get(url="https://challenge.flipboard.com/step?s=3.47"+"&x="+self.x+"&y="+self.y)
+		print "https://challenge.flipboard.com/step?s=3.47"+"&x="+self.x+"&y="+self.y
 		data = json.loads(response.text)
 		if (self.x,self.y) not in self.d:
 			self.path += data['letter']
-			print data['letter']
-			self.d[(self.x,self.y)] = self.depth
-			print self.d
+			#print data['letter']
+			self.d[(self.x,self.y)] = self.depth #coordinate value as key with value of depth 
+			#print self.d
 
 		if data['end'] == True:
 			print self.path
@@ -122,6 +125,7 @@ class Maze:
 
 	#/check?s=123456.5&guess=pqkefzvymrbtfqntnqkrdipik - True Example
 	#/check?s=123456.5&guess=pqk - False Example
+	#/check?s=3.47&guess=mtugyzwykecrzsdtnjrgzuhlgpvldylhabjwxojnhribpiqr
 	def check(self):
 		trueOutput = json.JSONEncoder().encode({'success': True}) #true output in json
 		falseOutput = json.JSONEncoder().encode({'success': False}) #false ouput in json
@@ -132,31 +136,33 @@ class Maze:
 		self.guess = query['guess'][0] #maze path set to guess
 		if (self.s or self.guess) == None: #check if both paramenters are present
 			print json.loads(falseOutput)
-			return json.loads(falseOutput)
-
+			return 
 		response = requests.get(url="https://challenge.flipboard.com/step?s="+self.s+"&x="+self.x+"&y="+self.y) #starts at (0,0)
 		data = json.loads(response.text)
 		if data['letter'] != self.guess[0]: #check first letter in path
 			print json.loads(falseOutput)
-			return json.loads(falseOutput)
+			return 
 		else:
 			self.guess = self.guess[1:] #iterate +1 for guess
 			length = len(data['adjacent']) #determine the initial adjacent points to (0,0)
 
 		for letter in self.guess: #iterate through all letters
 			counter = 0 #set counter to keep track of vertices attemtped
+			print data['letter']
 			if counter >= length: #if vertices attempted are
 				print json.loads(falseOutput)
-				return json.loads(falseOutput)
-			#print "https://challenge.flipboard.com/step?s="+self.s+"&x="+self.x+"&y="+self.y+" --------current step"
+				return 
 			response = requests.get(url="https://challenge.flipboard.com/step?s="+self.s+"&x="+self.x+"&y="+self.y) #request current step
 			data = json.loads(response.text) #load current step
+			print data
 			length = len(data['adjacent']) #determine how many adjacent points are present
 			i = 0 #iterator to go through adjacent vertices
 			for adjacent in data['adjacent']:
-				#print "https://challenge.flipboard.com/step?s="+self.s+"&x="+str(data["adjacent"][i]['x'])+"&y="+str(data["adjacent"][i]['y'])+" --------adjacent step"
+				print "https://challenge.flipboard.com/step?s="+self.s+"&x="+str(data["adjacent"][i]['x'])+"&y="+str(data["adjacent"][i]['y'])+" --------adjacent step"
 				response2 = requests.get(url="https://challenge.flipboard.com/step?s="+self.s+"&x="+str(data["adjacent"][i]['x'])+"&y="+str(data["adjacent"][i]['y'])) #request adjacent step
 				data2 = json.loads(response2.text) #load adjacent step
+				print data2
+				print "https://challenge.flipboard.com/step?s="+self.s+"&x="+self.x+"&y="+self.y
 				if data2['letter'] == letter:
 					self.x = str(data["adjacent"][i]['x']) #set new point x value if letter is found
 					self.y = str(data["adjacent"][i]['y']) #set new point y value if letter is found
@@ -167,10 +173,8 @@ class Maze:
 
 		if data2['end'] == True: #check if last point has end value of true
 			print json.loads(trueOutput)
-			return json.loads(trueOutput)
 		else:
 			print json.loads(falseOutput)
-			return json.loads(falseOutput)
 
 if __name__ == "__main__":
 	instance = Maze()
